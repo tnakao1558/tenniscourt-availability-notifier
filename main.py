@@ -97,6 +97,14 @@ def send_line_notification(message):
         print(f"Error sending LINE notification: {e}")
         sys.exit(1)
 
+def save_html_to_file(html, filename):
+    try:
+        with open(filename, 'w', encoding='utf-8') as file:
+            file.write(html)
+    except Exception as e:
+        print(f"Error saving HTML to file: {e}")
+        sys.exit(1)
+
 def main():
     search_results_html = get_search_results()
     save_html_to_file(search_results_html, 'search_results.html')
