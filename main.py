@@ -21,12 +21,15 @@ def check_availability():
         current_weekend = [now + datetime.timedelta(days=(5 - now.weekday())), 
                            now + datetime.timedelta(days=(6 - now.weekday()))]
         
+        print(f"Checking for slots on: {current_weekend}")
+
         for court in courts:
             for slot in court.find_all('time_slot'):
                 slot_time = datetime.datetime.strptime(slot['time'], '%Y-%m-%d %H:%M')
                 if slot_time.weekday() in [5, 6] and 13 <= slot_time.hour < 19 and slot['status'] == 'available':
                     if slot_time.date() in [d.date() for d in current_weekend]:
                         available.append((court['name'], slot_time))
+                        print(f"Found available slot: {court['name']} at {slot_time}")
         
         return available
     except Exception as e:
@@ -52,6 +55,7 @@ def send_line_notification(message):
             data=data
         )
         response.raise_for_status()
+        print("LINE notification sent successfully")
     except Exception as e:
         print(f"Error sending LINE notification: {e}")
         sys.exit(1)
