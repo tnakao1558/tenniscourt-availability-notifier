@@ -4,14 +4,36 @@ import datetime
 import os
 import sys
 
-# 小金井公園のページURL
+# 小金井公園の検索ページURL
 url = 'https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp'
+search_url = 'https://kouen.sports.metro.tokyo.lg.jp/web/guest/dumb?command=plan&nextCmd=facility&'
 
-def check_availability():
+def get_search_results():
     try:
-        response = requests.get(url)
+        session = requests.Session()
+        response = session.get(url)
         response.raise_for_status()
+        
         soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # フォームデータの準備
+        form_data = {
+            'shisetsuCategory': '1',  # 種目：テニス（人工芝）
+            'park': '102',            # 公園：小金井公園
+            'command': 'list'
+        }
+        
+        search_response = session.post(search_url, data=form_data)
+        search_response.raise_for_status()
+        
+        return search_response.text
+    except Exception as e:
+        print(f"Error fetching search results: {e}")
+        sys.exit(1)
+
+def check_availability(html):
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
         
         # 必要なデータを効率的に取得（HTML構造に依存）
         courts = soup.find_all('court')
@@ -61,7 +83,8 @@ def send_line_notification(message):
         sys.exit(1)
 
 def main():
-    available_slots = check_availability()
+    search_results_html = get_search_results()
+    available_slots = check_availability(search_results_html)
     if available_slots:
         message = f"空き状況:\n" + "\n".join([f"{slot[0]} at {slot[1].strftime('%Y-%m-%d %H:%M')}" for slot in available_slots])
         send_line_notification(message)
