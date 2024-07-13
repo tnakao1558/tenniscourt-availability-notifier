@@ -4,9 +4,8 @@ import datetime
 import os
 import sys
 
-# 小金井公園の検索ページURL
+# 小金井公園のTOPページURL
 url = 'https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp'
-search_url = 'https://kouen.sports.metro.tokyo.lg.jp/web/guest/dumb?command=plan&nextCmd=facility&'
 
 def get_search_results():
     try:
@@ -16,12 +15,21 @@ def get_search_results():
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # フォームの送信先URLを取得
+        form = soup.find('form', {'name': 'rsvMainForm'})
+        action_url = form['action']
+        search_url = requests.compat.urljoin(url, action_url)
+
         # フォームデータの準備
-        form_data = {
-            'shisetsuCategory': '1',  # 種目：テニス（人工芝）
-            'park': '102',            # 公園：小金井公園
-            'command': 'list'
-        }
+        form_data = {}
+        for input_tag in form.find_all('input'):
+            if input_tag.get('name'):
+                form_data[input_tag.get('name')] = input_tag.get('value')
+
+        # 必要なフィールドの設定
+        form_data['shisetsuCategory'] = '1'  # 種目：テニス（人工芝）
+        form_data['park'] = '102'            # 公園：小金井公園
+        form_data['command'] = 'list'
         
         search_response = session.post(search_url, data=form_data)
         search_response.raise_for_status()
