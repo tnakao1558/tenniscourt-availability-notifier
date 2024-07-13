@@ -48,8 +48,8 @@ def check_availability(html):
     try:
         soup = BeautifulSoup(html, 'html.parser')
         
-        # 必要なデータを効率的に取得（HTML構造に依存）
-        courts = soup.find_all('court')
+        # 検索結果ページのHTMLを解析して空きスロットを取得
+        courts = soup.find_all('div', class_='available')  # 例として 'div' タグと 'available' クラスを使用しています。実際のタグ名とクラス名を使用してください。
         available = []
 
         now = datetime.datetime.now()
@@ -59,12 +59,14 @@ def check_availability(html):
         print(f"Checking for slots on: {current_weekend}")
 
         for court in courts:
-            for slot in court.find_all('time_slot'):
-                slot_time = datetime.datetime.strptime(slot['time'], '%Y-%m-%d %H:%M')
-                if slot_time.weekday() in [5, 6] and 13 <= slot_time.hour < 19 and slot['status'] == 'available':
+            court_name = court.find('div', class_='court-name').text.strip()  # コート名を取得
+            for slot in court.find_all('div', class_='time-slot'):  # 例として 'div' タグと 'time-slot' クラスを使用しています。実際のタグ名とクラス名を使用してください。
+                slot_time_str = slot.find('span', class_='time').text.strip()
+                slot_time = datetime.datetime.strptime(slot_time_str, '%Y-%m-%d %H:%M')
+                if slot_time.weekday() in [5, 6] and 13 <= slot_time.hour < 19 and 'available' in slot['class']:
                     if slot_time.date() in [d.date() for d in current_weekend]:
-                        available.append((court['name'], slot_time))
-                        print(f"Found available slot: {court['name']} at {slot_time}")
+                        available.append((court_name, slot_time))
+                        print(f"Found available slot: {court_name} at {slot_time}")
         
         return available
     except Exception as e:
@@ -97,6 +99,9 @@ def send_line_notification(message):
 
 def main():
     search_results_html = get_search_results()
+    save_html_to_file(search_results_html, 'search_results.html')
+    print("Search results HTML saved to search_results.html")
+
     available_slots = check_availability(search_results_html)
     if available_slots:
         message = f"空き状況:\n" + "\n".join([f"{slot[0]} at {slot[1].strftime('%Y-%m-%d %H:%M')}" for slot in available_slots])
