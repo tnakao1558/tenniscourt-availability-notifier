@@ -13,7 +13,7 @@ This repository contains a Python script and GitHub Actions workflow to check th
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/TennisCourtAvailabilityNotifier.git
+    git clone https://github.com/tnakao1558/TennisCourtAvailabilityNotifier.git
     cd TennisCourtAvailabilityNotifier
     ```
 
