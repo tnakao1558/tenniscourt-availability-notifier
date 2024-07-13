@@ -17,7 +17,15 @@ def get_search_results():
         
         # フォームの送信先URLを取得
         form = soup.find('form', {'name': 'rsvMainForm'})
-        action_url = form['action']
+        if not form:
+            print("Form not found")
+            sys.exit(1)
+
+        action_url = form.get('action')
+        if not action_url:
+            print("Action URL not found in form")
+            sys.exit(1)
+
         search_url = requests.compat.urljoin(url, action_url)
 
         # フォームデータの準備
