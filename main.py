@@ -10,7 +10,7 @@ def send_line_notification(message):
             sys.exit(1)
         
         headers = {
-            'Authorization': f'Bearer {line_token}',
+            'Authorization': f'Bearer ' + line_token,
         }
         data = {
             'message': message,
