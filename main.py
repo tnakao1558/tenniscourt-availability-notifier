@@ -67,37 +67,40 @@ def check_availability():
         search_button = driver.find_element(By.ID, "btn-go")
         search_button.click()
 
-        # アラートが表示されるか確認し、閉じる
-        try:
-            WebDriverWait(driver, 10).until(EC.alert_is_present())
-            alert = driver.switch_to.alert
-            print(f"Alert Text: {alert.text}")
-            alert.accept()
-            notify_line(f"検索結果にエラー: {alert.text}")
-            return  # アラートが表示された場合、処理を中断
-        except NoAlertPresentException:
-            pass
-
-        # 検索結果を待機
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "search-result")))
-
-        # 検索結果を取得
-        results = driver.find_element(By.CLASS_NAME, "search-result").text
-        print(results)
-
-        # 空き状況をLINEに通知
-        notify_line(f"小金井公園のテニスコート空き状況:\n{results}")
-
-    except UnexpectedAlertPresentException as e:
-        alert = driver.switch_to.alert
-        print(f"Error fetching search results: Alert Text: {alert.text}")
-        alert.accept()
-        notify_line(f"検索結果にエラー: {alert.text}")
-    except Exception as e:
-        print(f"Error fetching search results: {str(e)}")
-        notify_line(f"検索結果にエラー: {str(e)}")
-    finally:
+        print(driver.current_url)
         driver.quit()
+
+    #     # アラートが表示されるか確認し、閉じる
+    #     try:
+    #         WebDriverWait(driver, 10).until(EC.alert_is_present())
+    #         alert = driver.switch_to.alert
+    #         print(f"Alert Text: {alert.text}")
+    #         alert.accept()
+    #         #notify_line(f"検索結果にエラー: {alert.text}")
+    #         return  # アラートが表示された場合、処理を中断
+    #     except NoAlertPresentException:
+    #         pass
+
+    #     # 検索結果を待機
+    #     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "search-result")))
+
+    #     # 検索結果を取得
+    #     results = driver.find_element(By.CLASS_NAME, "search-result").text
+    #     print(results)
+
+    #     # 空き状況をLINEに通知
+    #     notify_line(f"小金井公園のテニスコート空き状況:\n{results}")
+
+    # except UnexpectedAlertPresentException as e:
+    #     alert = driver.switch_to.alert
+    #     print(f"Error fetching search results: Alert Text: {alert.text}")
+    #     alert.accept()
+    #     notify_line(f"検索結果にエラー: {alert.text}")
+    # except Exception as e:
+    #     print(f"Error fetching search results: {str(e)}")
+    #     notify_line(f"検索結果にエラー: {str(e)}")
+    # finally:
+    #     driver.quit()
 
 if __name__ == "__main__":
     check_availability()
