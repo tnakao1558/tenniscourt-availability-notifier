@@ -1,121 +1,50 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+import requests
+from bs4 import BeautifulSoup
 import datetime
 import os
 import sys
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+
+# 小金井公園のTOPページURL
+url = 'https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp'
 
 def get_search_results():
     try:
-        # Chrome WebDriverのセットアップ
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-
-        # トップページを開く
-        driver.get('https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp')
-
-        # 日付を入力
-        day_start_element = driver.find_element(By.ID, 'daystart-home')
-        day_start_element.send_keys(datetime.datetime.now().strftime('%Y-%m-%d'))
-
-        # 種目を選択
-        purpose_select = Select(driver.find_element(By.ID, 'purpose-home'))
-        purpose_select.select_by_value('1000_1030')  # テニス（人工芝）
-
-        # 公園を選択（公園名は適宜変更してください）
-        park_select = Select(driver.find_element(By.ID, 'bname-home'))
-        park_select.select_by_visible_text('小金井公園')
-
-        # 検索ボタンをクリック
-        search_button = driver.find_element(By.ID, 'btn-go')
-        search_button.click()
-
-        # 検索結果ページのHTMLを取得
-        html = driver.page_source
-
+        chrome_options = Options()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--remote-debugging-port=9222')
+        
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        
+        driver.get(url)
+        
+        # 入力フォームに値を設定し、検索を実行
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'daystarthome'))).send_keys(
+            datetime.datetime.now().strftime('%Y-%m-%d'))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'purpose-home'))).send_keys('テニス（人工芝）')
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'bname-home'))).send_keys('小金井公園')
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'command'))).send_keys(Keys.RETURN)
+        
+        # 検索結果を取得
+        search_results_html = driver.page_source
         driver.quit()
-        return html
+        
+        return search_results_html
     except Exception as e:
         print(f"Error fetching search results: {e}")
-        if 'driver' in locals():
-            driver.quit()
         sys.exit(1)
 
-def check_availability(html):
-    try:
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        # 検索結果ページのHTMLを解析して空きスロットを取得
-        courts = soup.find_all('div', class_='available')  # 'available' クラスを持つ要素を取得
-        available = []
-
-        now = datetime.datetime.now()
-        current_weekend = [now + datetime.timedelta(days=(5 - now.weekday())), 
-                           now + datetime.timedelta(days=(6 - now.weekday()))]
-        
-        print(f"Checking for slots on: {current_weekend}")
-
-        for court in courts:
-            court_name = court.find('div', class_='court-name').text.strip()  # コート名を取得
-            for slot in court.find_all('div', class_='time-slot'):  # 'time-slot' クラスを持つ要素を取得
-                slot_time_str = slot.find('span', class_='time').text.strip()
-                slot_time = datetime.datetime.strptime(slot_time_str, '%Y-%m-%d %H:%M')
-                if slot_time.weekday() in [5, 6] and 13 <= slot_time.hour < 19 and 'available' in slot['class']:
-                    if slot_time.date() in [d.date() for d in current_weekend]:
-                        available.append((court_name, slot_time))
-                        print(f"Found available slot: {court_name} at {slot_time}")
-        
-        return available
-    except Exception as e:
-        print(f"Error checking availability: {e}")
-        sys.exit(1)
-
-def send_line_notification(message):
-    try:
-        import requests
-        line_token = os.getenv('LINE_NOTIFY_TOKEN')
-        if not line_token:
-            print("LINE_NOTIFY_TOKEN is not set")
-            sys.exit(1)
-        
-        headers = {
-            'Authorization': f'Bearer {line_token}',
-        }
-        data = {
-            'message': message,
-        }
-        response = requests.post(
-            'https://notify-api.line.me/api/notify',
-            headers=headers,
-            data=data
-        )
-        response.raise_for_status()
-        print("LINE notification sent successfully")
-    except Exception as e:
-        print(f"Error sending LINE notification: {e}")
-        sys.exit(1)
-
-def save_html_to_file(html, filename):
-    try:
-        with open(filename, 'w', encoding='utf-8') as file:  # UTF-8 エンコーディングで保存
-            file.write(html)
-    except Exception as e:
-        print(f"Error saving HTML to file: {e}")
-        sys.exit(1)
-
-def main():
-    search_results_html = get_search_results()
-    save_html_to_file(search_results_html, 'search_results.html')
-    print("Search results HTML saved to search_results.html")
-
-    available_slots = check_availability(search_results_html)
-    if available_slots:
-        message = f"空き状況:\n" + "\n".join([f"{slot[0]} at {slot[1].strftime('%Y-%m-%d %H:%M')}" for slot in available_slots])
-        send_line_notification(message)
-    else:
-        print("No available slots found")
+# 省略...
 
 if __name__ == "__main__":
     main()
