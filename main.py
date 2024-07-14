@@ -25,9 +25,11 @@ def get_search_results():
         chrome_options.add_argument('--remote-debugging-port=9222')
         chrome_options.add_argument('--window-size=1920x1080')
         chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-software-rasterizer')
-        
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-3d-apis')
+        chrome_options.add_argument('--disable-features=VizDisplayCompositor')
+
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         
         driver.get(url)
