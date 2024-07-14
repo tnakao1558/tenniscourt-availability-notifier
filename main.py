@@ -37,14 +37,12 @@ def get_search_results():
         
         driver.get(url)
         
-        # 入力フォームに値を設定し、検索を実行
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'daystarthome'))).send_keys(
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'daystarthome'))).send_keys(
             datetime.datetime.now().strftime('%Y-%m-%d'))
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'purpose-home'))).send_keys('テニス（人工芝）')
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'bname-home'))).send_keys('小金井公園')
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'command'))).send_keys(Keys.RETURN)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'purpose-home'))).send_keys('テニス（人工芝）')
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'bname-home'))).send_keys('小金井公園')
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'command'))).send_keys(Keys.RETURN)
         
-        # 検索結果を取得
         search_results_html = driver.page_source
         driver.quit()
         
@@ -57,8 +55,7 @@ def check_availability(html):
     try:
         soup = BeautifulSoup(html, 'html.parser')
         
-        # 検索結果ページのHTMLを解析して空きスロットを取得
-        courts = soup.find_all('div', class_='available')  # 例として 'div' タグと 'available' クラスを使用しています。実際のタグ名とクラス名を使用してください。
+        courts = soup.find_all('div', class_='available')  
         available = []
 
         now = datetime.datetime.now()
@@ -68,8 +65,8 @@ def check_availability(html):
         print(f"Checking for slots on: {current_weekend}")
 
         for court in courts:
-            court_name = court.find('div', class_='court-name').text.strip()  # コート名を取得
-            for slot in court.find_all('div', class_='time-slot'):  # 例として 'div' タグと 'time-slot' クラスを使用しています。実際のタグ名とクラス名を使用してください。
+            court_name = court.find('div', class_='court-name').text.strip()  
+            for slot in court.find_all('div', class_='time-slot'): 
                 slot_time_str = slot.find('span', class_='time').text.strip()
                 slot_time = datetime.datetime.strptime(slot_time_str, '%Y-%m-%d %H:%M')
                 if slot_time.weekday() in [5, 6] and 13 <= slot_time.hour < 19 and 'available' in slot['class']:
