@@ -6,7 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException
 
 # LINE Notifyのアクセストークン
 LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN")
@@ -41,7 +41,7 @@ def notify_line(message):
     print(response.status_code)
 
 def check_availability():
-    #try:
+    try:
         driver.get("https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp")
 
         # 利用日を入力
@@ -60,48 +60,47 @@ def check_availability():
         # 公園を選択
         bname_select = driver.find_element(By.ID, "bname-home")
         bname_select.click()
+
+        # 公園の選択肢をデバッグ出力
+        park_options = bname_select.find_elements(By.TAG_NAME, "option")
+        for option in park_options:
+            print(option.text)
+
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[. = '小金井公園']")))
         bname_select.find_element(By.XPATH, "//option[. = '小金井公園']").click()  # 小金井公園
 
         # 検索ボタンをクリック
         search_button = driver.find_element(By.ID, "btn-go")
         search_button.click()
-        
+
+        # アラートが表示されるか確認し、閉じる
+        try:
+            WebDriverWait(driver, 10).until(EC.alert_is_present())
+            alert = driver.switch_to.alert
+            print(f"Alert Text: {alert.text}")
+            alert.accept()
+            notify_line(f"検索結果にエラー: {alert.text}")
+            return  # アラートが表示された場合、処理を中断
+        except NoAlertPresentException:
+            pass
+
+        # ページが遷移するまで待機
         WebDriverWait(driver, 10).until(EC.url_changes(driver.current_url))
-        print(driver.current_url)
+        print(driver.current_url)  # 現在のURLを表示
+
+    except UnexpectedAlertPresentException as e:
+        alert = driver.switch_to.alert
+        print(f"Error fetching search results: Alert Text: {alert.text}")
+        alert.accept()
+        notify_line(f"検索結果にエラー: {alert.text}")
+    except NoSuchElementException as e:
+        print(f"No such element: {str(e)}")
+        notify_line(f"指定された要素が見つかりませんでした: {str(e)}")
+    except Exception as e:
+        print(f"Error fetching search results: {str(e)}")
+        notify_line(f"検索結果にエラー: {str(e)}")
+    finally:
         driver.quit()
 
-    #     # アラートが表示されるか確認し、閉じる
-    #     try:
-    #         WebDriverWait(driver, 10).until(EC.alert_is_present())
-    #         alert = driver.switch_to.alert
-    #         print(f"Alert Text: {alert.text}")
-    #         alert.accept()
-    #         #notify_line(f"検索結果にエラー: {alert.text}")
-    #         return  # アラートが表示された場合、処理を中断
-    #     except NoAlertPresentException:
-    #         pass
-
-    #     # 検索結果を待機
-    #     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "search-result")))
-
-    #     # 検索結果を取得
-    #     results = driver.find_element(By.CLASS_NAME, "search-result").text
-    #     print(results)
-
-    #     # 空き状況をLINEに通知
-    #     notify_line(f"小金井公園のテニスコート空き状況:\n{results}")
-
-    # except UnexpectedAlertPresentException as e:
-    #     alert = driver.switch_to.alert
-    #     print(f"Error fetching search results: Alert Text: {alert.text}")
-    #     alert.accept()
-    #     notify_line(f"検索結果にエラー: {alert.text}")
-    # except Exception as e:
-    #     print(f"Error fetching search results: {str(e)}")
-    #     notify_line(f"検索結果にエラー: {str(e)}")
-    # finally:
-    #     driver.quit()
-
-#if __name__ == "__main__":
-check_availability()
+if __name__ == "__main__":
+    check_availability()
