@@ -76,6 +76,9 @@ def check_availability():
         search_button = driver.find_element(By.ID, "btn-go")
         search_button.click()
 
+        # ページのHTMLを出力して確認
+        print(driver.page_source)
+
         # アラートが表示されるか確認し、閉じる
         try:
             WebDriverWait(driver, 10).until(EC.alert_is_present())
