@@ -1,128 +1,37 @@
-import requests
-from bs4 import BeautifulSoup
-import datetime
-import os
-import sys
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
+import time
+import random
 
-# 小金井公園のTOPページURL
-url = 'https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp'
+# User-Agentのリスト
+user_agents = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/B08C3901",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299"
+]
 
-def get_search_results():
-    try:
-        chrome_options = Options()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--remote-debugging-port=9222')
-        chrome_options.add_argument('--window-size=1920x1080')
-        chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--disable-software-rasterizer')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-3d-apis')
-        chrome_options.add_argument('--disable-features=VizDisplayCompositor')
-        chrome_options.add_argument('--log-level=3')
-        chrome_options.add_argument('--enable-logging')
-        chrome_options.add_argument('--v=1')
+# ランダムにUser-Agentを選択
+user_agent = random.choice(user_agents)
 
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-        
-        driver.get(url)
-        
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'daystarthome'))).send_keys(
-            datetime.datetime.now().strftime('%Y-%m-%d'))
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'purpose-home'))).send_keys('テニス（人工芝）')
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'bname-home'))).send_keys('小金井公園')
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'command'))).send_keys(Keys.RETURN)
-        
-        search_results_html = driver.page_source
-        driver.quit()
-        
-        return search_results_html
-    except Exception as e:
-        print(f"Error fetching search results: {e}")
-        driver.quit()
-        sys.exit(1)
+# webdriverの作成
+options = webdriver.ChromeOptions()
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument('--headless')
+options.add_argument(f'user-agent={user_agent}') # User-Agentを設定
+driver = webdriver.Chrome(options=options)
 
-def check_availability(html):
-    try:
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        courts = soup.find_all('div', class_='available')  
-        available = []
+# 要素が見つからない場合は5秒待つように設定
+driver.implicitly_wait(5)
+# 要素が有効になるまで5秒待機
+wait = WebDriverWait(driver, 5)
 
-        now = datetime.datetime.now()
-        current_weekend = [now + datetime.timedelta(days=(5 - now.weekday())), 
-                           now + datetime.timedelta(days=(6 - now.weekday()))]
-        
-        print(f"Checking for slots on: {current_weekend}")
+# 検索したいサイト
+driver.get("https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp")
 
-        for court in courts:
-            court_name = court.find('div', class_='court-name').text.strip()  
-            for slot in court.find_all('div', class_='time-slot'): 
-                slot_time_str = slot.find('span', class_='time').text.strip()
-                slot_time = datetime.datetime.strptime(slot_time_str, '%Y-%m-%d %H:%M')
-                if slot_time.weekday() in [5, 6] and 13 <= slot_time.hour < 19 and 'available' in slot['class']:
-                    if slot_time.date() in [d.date() for d in current_weekend]:
-                        available.append((court_name, slot_time))
-                        print(f"Found available slot: {court_name} at {slot_time}")
-        
-        return available
-    except Exception as e:
-        print(f"Error checking availability: {e}")
-        sys.exit(1)
+# 検索したページのHTMLを表示
+print(driver.page_source)
 
-def send_line_notification(message):
-    try:
-        line_token = os.getenv('LINE_NOTIFY_TOKEN')
-        if not line_token:
-            print("LINE_NOTIFY_TOKEN is not set")
-            sys.exit(1)
-        
-        headers = {
-            'Authorization': f'Bearer {line_token}',
-        }
-        data = {
-            'message': message,
-        }
-        response = requests.post(
-            'https://notify-api.line.me/api/notify',
-            headers=headers,
-            data=data
-        )
-        response.raise_for_status()
-        print("LINE notification sent successfully")
-    except Exception as e:
-        print(f"Error sending LINE notification: {e}")
-        sys.exit(1)
-
-def save_html_to_file(html, filename):
-    try:
-        with open(filename, 'w', encoding='utf-8') as file:
-            file.write(html)
-    except Exception as e:
-        print(f"Error saving HTML to file: {e}")
-        sys.exit(1)
-
-def main():
-    search_results_html = get_search_results()
-    save_html_to_file(search_results_html, 'search_results.html')
-    print("Search results HTML saved to search_results.html")
-
-    available_slots = check_availability(search_results_html)
-    if available_slots:
-        message = f"空き状況:\n" + "\n".join([f"{slot[0]} at {slot[1].strftime('%Y-%m-%d %H:%M')}" for slot in available_slots])
-        send_line_notification(message)
-    else:
-        print("No available slots found")
-
-if __name__ == "__main__":
-    main()
+# webdriverの終了
+driver.quit()
