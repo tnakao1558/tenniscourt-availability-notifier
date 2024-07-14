@@ -60,7 +60,7 @@ def check_availability():
         # 公園を選択
         bname_select = driver.find_element(By.ID, "bname-home")
         bname_select.click()
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[@value='1240']")))
+        #WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[. = '小金井公園']")))
         bname_select.find_element(By.XPATH, "//option[. = '小金井公園']").click()  # 小金井公園
 
         # 検索ボタンをクリック
