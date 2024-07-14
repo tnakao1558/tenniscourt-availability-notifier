@@ -102,5 +102,5 @@ def check_availability():
     # finally:
     #     driver.quit()
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     check_availability()
