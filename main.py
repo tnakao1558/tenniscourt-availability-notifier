@@ -66,7 +66,8 @@ def check_availability():
         # 検索ボタンをクリック
         search_button = driver.find_element(By.ID, "btn-go")
         search_button.click()
-
+        
+        WebDriverWait(driver, 10).until(EC.url_changes(driver.current_url))
         print(driver.current_url)
         driver.quit()
 
