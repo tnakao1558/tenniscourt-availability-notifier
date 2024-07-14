@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 import os
-import sys  # sys モジュールのインポート
+import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -23,6 +23,10 @@ def get_search_results():
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--remote-debugging-port=9222')
+        chrome_options.add_argument('--window-size=1920x1080')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-software-rasterizer')
         
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         

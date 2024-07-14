@@ -6,31 +6,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  selenium-test:
+  build:
     runs-on: ubuntu-latest
 
-    services:
-      selenium:
-        image: selenium/standalone-chrome
-        ports:
-          - 4444:4444
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.10.13'  # 正しいPythonバージョンに修正
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.10
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        sudo apt-get update
+        sudo apt-get install -y libgbm-dev libxshmfence-dev
+        sudo apt-get install -y xvfb
 
-      - name: Run Selenium test
-        env:
-          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
-        run: |
-          python main.py
+    - name: Run main.py
+      run: |
+        xvfb-run -a python main.py
+      env:
+        LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
