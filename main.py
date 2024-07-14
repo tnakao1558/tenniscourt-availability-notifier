@@ -53,9 +53,13 @@ def check_availability():
         purpose_select.click()
         purpose_select.find_element(By.XPATH, "//option[@value='1000_1030']").click()  # テニス（人工芝）
 
+        # 公園名選択肢が表示されるのを待機
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "bname-home")))
+
         # 公園を選択
         bname_select = driver.find_element(By.ID, "bname-home")
         bname_select.click()
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[text()='小金井公園']")))
         bname_select.find_element(By.XPATH, "//option[text()='小金井公園']").click()
 
         # 検索ボタンをクリック
