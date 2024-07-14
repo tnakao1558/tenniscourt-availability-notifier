@@ -52,7 +52,7 @@ def check_availability():
         # 種目を選択
         purpose_select = driver.find_element(By.ID, "purpose-home")
         purpose_select.click()
-        purpose_select.find_element(By.XPATH, "//option[@value='1000_1030']").click()  # テニス（人工芝）
+        purpose_select.find_element(By.XPATH, "//option[. = 'テニス（人工芝）']").click()  # テニス（人工芝）
 
         # 公園名選択肢が表示されるのを待機
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "bname-home")))
@@ -61,7 +61,7 @@ def check_availability():
         bname_select = driver.find_element(By.ID, "bname-home")
         bname_select.click()
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[@value='1240']")))
-        bname_select.find_element(By.XPATH, "//option[@value='1240']").click()  # 小金井公園
+        bname_select.find_element(By.XPATH, "//option[. = '小金井公園']").click()  # 小金井公園
 
         # 検索ボタンをクリック
         search_button = driver.find_element(By.ID, "btn-go")
