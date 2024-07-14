@@ -41,7 +41,7 @@ def notify_line(message):
     print(response.status_code)
 
 def check_availability():
-    try:
+    #try:
         driver.get("https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp")
 
         # 利用日を入力
@@ -103,4 +103,4 @@ def check_availability():
     #     driver.quit()
 
 #if __name__ == "__main__":
-    check_availability()
+check_availability()
