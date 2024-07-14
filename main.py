@@ -29,6 +29,9 @@ def get_search_results():
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-3d-apis')
         chrome_options.add_argument('--disable-features=VizDisplayCompositor')
+        chrome_options.add_argument('--log-level=3')
+        chrome_options.add_argument('--enable-logging')
+        chrome_options.add_argument('--v=1')
 
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         
