@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException
 
 # LINE Notifyのアクセストークン
 LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN")
@@ -66,6 +67,15 @@ def check_availability():
         search_button = driver.find_element(By.ID, "btn-go")
         search_button.click()
 
+        # アラートが表示されるか確認し、閉じる
+        try:
+            WebDriverWait(driver, 10).until(EC.alert_is_present())
+            alert = driver.switch_to.alert
+            print(f"Alert Text: {alert.text}")
+            alert.accept()
+        except NoAlertPresentException:
+            pass
+
         # 検索結果を待機
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "search-result")))
 
@@ -76,6 +86,10 @@ def check_availability():
         # 空き状況をLINEに通知
         notify_line(f"小金井公園のテニスコート空き状況:\n{results}")
 
+    except UnexpectedAlertPresentException as e:
+        alert = driver.switch_to.alert
+        print(f"Error fetching search results: Alert Text: {alert.text}")
+        alert.accept()
     except Exception as e:
         print(f"Error fetching search results: {str(e)}")
     finally:
