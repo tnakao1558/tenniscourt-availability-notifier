@@ -60,8 +60,8 @@ def check_availability():
         # 公園を選択
         bname_select = driver.find_element(By.ID, "bname-home")
         bname_select.click()
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[text()='小金井公園']")))
-        bname_select.find_element(By.XPATH, "//option[text()='小金井公園']").click()
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//option[@value='1240']")))
+        bname_select.find_element(By.XPATH, "//option[@value='1240']").click()  # 小金井公園
 
         # 検索ボタンをクリック
         search_button = driver.find_element(By.ID, "btn-go")
@@ -73,6 +73,8 @@ def check_availability():
             alert = driver.switch_to.alert
             print(f"Alert Text: {alert.text}")
             alert.accept()
+            notify_line(f"検索結果にエラー: {alert.text}")
+            return  # アラートが表示された場合、処理を中断
         except NoAlertPresentException:
             pass
 
@@ -90,8 +92,10 @@ def check_availability():
         alert = driver.switch_to.alert
         print(f"Error fetching search results: Alert Text: {alert.text}")
         alert.accept()
+        notify_line(f"検索結果にエラー: {alert.text}")
     except Exception as e:
         print(f"Error fetching search results: {str(e)}")
+        notify_line(f"検索結果にエラー: {str(e)}")
     finally:
         driver.quit()
 
