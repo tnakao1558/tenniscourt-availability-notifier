@@ -15,7 +15,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.10.13'
+        python-version: 3.10
 
     - name: Install dependencies
       run: |
@@ -24,7 +24,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libgbm-dev libxshmfence-dev
         sudo apt-get install -y xvfb
-        sudo apt-get install -y google-chrome-stable
+        sudo apt-get install -y wget unzip
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt install ./google-chrome-stable_current_amd64.deb
+        google-chrome --version
 
     - name: Run main.py
       run: |

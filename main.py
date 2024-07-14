@@ -49,6 +49,7 @@ def get_search_results():
         return search_results_html
     except Exception as e:
         print(f"Error fetching search results: {e}")
+        driver.quit()
         sys.exit(1)
 
 def check_availability(html):
