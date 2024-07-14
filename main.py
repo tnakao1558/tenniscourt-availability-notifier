@@ -23,9 +23,9 @@ options.add_argument(f'user-agent={user_agent}') # User-Agentを設定
 driver = webdriver.Chrome(options=options)
 
 # 要素が見つからない場合は5秒待つように設定
-driver.implicitly_wait(5)
+#driver.implicitly_wait(5)
 # 要素が有効になるまで5秒待機
-wait = WebDriverWait(driver, 5)
+#wait = WebDriverWait(driver, 5)
 
 # 検索したいサイト
 driver.get("https://kouen.sports.metro.tokyo.lg.jp/web/index.jsp")
